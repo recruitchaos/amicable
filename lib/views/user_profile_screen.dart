@@ -1,20 +1,11 @@
 import 'package:amicable/appwrite/auth.dart';
-import 'package:amicable/controller/status_provider.dart';
-import 'package:amicable/login_screen.dart';
-import 'package:amicable/shared.dart';
-import 'package:amicable/status_screen.dart';
-import 'package:amicable/utils/current_user_status.dart';
-import 'package:amicable/utils/status.dart';
+import 'package:amicable/views/login_screen.dart';
 import 'package:appwrite/appwrite.dart';
 import 'dart:io';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_connect/http/src/multipart/multipart_file.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:http_parser/http_parser.dart';
-
-import 'moment_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -53,6 +44,46 @@ class _ProfileScreenState extends State<ProfileScreen>
   void dispose() {
     tabController.dispose();
     super.dispose();
+  }
+
+  File? _imageFile;
+  bool _isUploading = false;
+  late String _previewImageUrl;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedImage != null) {
+      setState(() {
+        _imageFile = File(pickedImage.path);
+        _previewImageUrl = '';
+      });
+    }
+  }
+
+  Future<void> _uploadImage() async {
+    setState(() {
+      _isUploading = true;
+    });
+
+    try {
+      final AuthAPI appwrite = context.read<AuthAPI>();
+      final response = await appwrite.storage.createFile(
+        file: await InputFile.fromPath(path: _imageFile!.path),
+         bucketId: '6489d589ad7217b71d23', fileId: ID.unique(),
+      ) as Map;
+
+      setState(() {
+        _isUploading = false;
+        _previewImageUrl = response['file']['url'];
+      });
+    } catch (e) {
+      setState(() {
+        _isUploading = false;
+      });
+      print('Error uploading image: $e');
+    }
   }
 
 
@@ -101,10 +132,12 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             GestureDetector(
               onTap: () {
-                
+                _pickImage();
+                _imageFile != null ? _uploadImage : null;
               },
               child: CircleAvatar(
                 radius: 60,
+                backgroundImage: _imageFile !=null ? Image.file(_imageFile!) as ImageProvider : AssetImage('assets/newyork.png'),
                 // backgroundImage: _file != null ? FileImage(File(_file!.path)) : null,
               ),
             ),

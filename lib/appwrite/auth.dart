@@ -3,9 +3,6 @@ import 'package:amicable/appwrite/appwrite_constants.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get_connect.dart';
-
-import '../shared.dart';
 
 enum AuthStatus {
   uninitialized,
@@ -106,8 +103,9 @@ class AuthAPI extends ChangeNotifier {
     }
   }
 
-  Future uploadFile(InputFile file, List<String> permission) async {
-    final res = await storage.createFile(bucketId: '6489d589ad7217b71d23', fileId: ID.unique(), file: file);
-    return res;
+  Future<File> uploadProfilePic(String imagePath) {
+    String fileName = "${DateTime.now().millisecondsSinceEpoch}""${imagePath.split(".").last}";
+    final response = storage.createFile(bucketId: '6489d589ad7217b71d23', fileId: ID.unique(), file: InputFile.fromPath(path: imagePath, filename: fileName));
+    return response;
   }
-}
+ }

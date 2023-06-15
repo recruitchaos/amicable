@@ -1,26 +1,40 @@
 import 'package:amicable/appwrite/auth.dart';
-import 'package:amicable/navigate.dart';
-import 'package:amicable/sign_up_screen.dart';
+import 'package:amicable/views/login_screen.dart';
+import 'package:amicable/controller/shared.dart';
 import 'package:amicable/utils/container_button.dart';
 import 'package:amicable/utils/custom_text_form_field.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:ionicons/ionicons.dart';
 import 'package:provider/provider.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+import '../appwrite/appwrite_constants.dart';
+
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _SignUpScreenState extends State<SignUpScreen> {
 
-  TextEditingController emailController = TextEditingController();
+   TextEditingController nameController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController usernameController = TextEditingController();
 
-  signIn() async {
+  Client client = Client();
+
+  late final Databases databases;
+
+  String databaseId = '64876a181ab843913baa';
+  String collectionId = '64895bfddf276bd5d24a';
+
+  
+
+  createAccount() async {
     showDialog(
         context: context,
         barrierDismissible: false,
@@ -34,18 +48,26 @@ class _LoginScreenState extends State<LoginScreen> {
                 ]),
           );
         });
-
     try {
       final AuthAPI appwrite = context.read<AuthAPI>();
-      await appwrite.createEmailSession(
+      await appwrite.createUser(
         email: emailController.text,
         password: passwordController.text,
+        userID: usernameController.text,
+        name: nameController.text,
       );
       Navigator.pop(context);
-      Navigator.push(context, MaterialPageRoute(builder: (context) => const Navigate()));
+      const snackbar = SnackBar(content: Text('Account created!'));
+      ScaffoldMessenger.of(context).showSnackBar(snackbar);
+      await UserSavedData.saveEmail(emailController.text);
+      await UserSavedData.saveUserID(usernameController.text);
+      final data = await databases.createDocument(collectionId: collectionId, databaseId: databaseId, documentId: ID.unique(), data: {
+        'UserID' : usernameController.text,
+      });
+      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
     } on AppwriteException catch (e) {
       Navigator.pop(context);
-      showAlert(title: 'Login failed', text: e.message.toString());
+      showAlert(title: 'Account creation failed', text: e.message.toString());
     }
   }
 
@@ -67,14 +89,16 @@ class _LoginScreenState extends State<LoginScreen> {
         });
   }
 
-  signInWithProvider(String provider) {
-    try {
-      context.read<AuthAPI>().signInWithProvider(provider: provider);
-    } on AppwriteException catch (e) {
-      showAlert(title: 'Login failed', text: e.message.toString());
-    }
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    client
+          .setEndpoint(endpoint)
+          .setProject(projectID)
+          .setSelfSigned();
+    databases = Databases(client);
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -90,22 +114,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   SizedBox(height: 20,),
                   Text("Amicable", style: TextStyle(fontSize: 40),),
                   SizedBox(height: 40,),
-                  CustomTextField(label: 'Email', controller: emailController, icon: Icon(EvaIcons.emailOutline), isObscure: false,),
+                  CustomTextField(label: 'Name', controller: nameController, icon: Icon(Ionicons.person_outline), isObscure: false,),
                   SizedBox(height: 20,),
+                  CustomTextField(label: 'Username', controller: usernameController, isObscure: false, icon: Icon(Ionicons.person)),
+                  SizedBox(height: 20,),
+                  CustomTextField(label: 'Email', controller: emailController, isObscure: false, icon: Icon(EvaIcons.emailOutline)),
+                   SizedBox(height: 20,),
                    CustomTextField(label: 'Password', controller: passwordController, icon: Icon(Icons.password_outlined), isObscure: true,),
                   
                    Spacer(),
-                   ContainerButton(onTap: () { signIn(); }, text: 'Login',),
+                   ContainerButton(onTap: () { createAccount(); }, text: 'Sign Up',),
                    SizedBox(height: 16,),
                    Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text("New to Amicable? "),
+                      Text("Already signed up? "),
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => LoginScreen()));
                         },
-                        child: Text("Sign up!", style: TextStyle(color: Colors.deepPurple),))
+                        child: Text("Login!", style: TextStyle(color: Colors.deepPurple),))
                     ],
                    )
                 ],

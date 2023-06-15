@@ -1,7 +1,7 @@
 import 'package:amicable/controller/status_provider.dart';
-import 'package:amicable/login_screen.dart';
-import 'package:amicable/navigate.dart';
-import 'package:amicable/shared.dart';
+import 'package:amicable/views/login_screen.dart';
+import 'package:amicable/views/navigate.dart';
+import 'package:amicable/controller/shared.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

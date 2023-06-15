@@ -1,10 +1,8 @@
 import 'package:amicable/appwrite/appwrite_constants.dart';
-import 'package:amicable/shared.dart';
+import 'package:amicable/controller/shared.dart';
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart';
 import 'package:flutter/material.dart';
-
-import '../appwrite/auth.dart';
 
 class StatusProvider extends ChangeNotifier{
   String databaseID = '64876a181ab843913baa';
